@@ -1,0 +1,4 @@
+system,TP,FP,TN,FN,accuracy,precision,recall,f1
+URL model only,0,0,100,100,0.5,0.0,0.0,0.0
+LLM only,48,7,93,52,0.705,0.873,0.48,0.619
+URL + LLM (final),48,7,93,52,0.705,0.873,0.48,0.619

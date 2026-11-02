@@ -1,4 +1,7 @@
-data
-data/
-/data
-/Users/bhawyagulati/Documents/Projects/PhishGuard/results/misclassified.csv
+.venv/
+__pycache__/
+*.pyc
+.env
+data/*.csv
+data/*.db
+.DS_Store

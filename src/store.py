@@ -5,6 +5,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = ROOT / "data" / "phishguard.db"
 
+# columns added by the LLM layer (older databases are upgraded automatically)
+NEW_COLUMNS = {
+    "url_score": "REAL",
+    "text_risk": "REAL",
+    "llm_summary": "TEXT",
+    "llm_fields": "TEXT",
+}
+
 
 def _conn():
     conn = sqlite3.connect(DB_PATH)
@@ -13,6 +21,7 @@ def _conn():
 
 
 def init_db():
+    DB_PATH.parent.mkdir(exist_ok=True)
     with _conn() as c:
         c.execute("""
             CREATE TABLE IF NOT EXISTS emails (
@@ -23,18 +32,26 @@ def init_db():
                 reviewer_action TEXT,   -- confirm | override | NULL
                 true_label INTEGER,     -- ground truth, only for evaluation
                 processing_ms REAL,
-                created_at TEXT, reviewed_at TEXT
+                created_at TEXT, reviewed_at TEXT,
+                url_score REAL, text_risk REAL, llm_summary TEXT, llm_fields TEXT
             )
         """)
+        existing = {r["name"] for r in c.execute("PRAGMA table_info(emails)").fetchall()}
+        for col, typ in NEW_COLUMNS.items():
+            if col not in existing:
+                c.execute(f"ALTER TABLE emails ADD COLUMN {col} {typ}")
 
 
-def add_email(sender, subject, body, url, score, reasons, status, true_label, processing_ms):
+def add_email(sender, subject, body, url, score, reasons, status, true_label, processing_ms,
+              url_score=None, text_risk=None, llm_summary=None, llm_fields=None):
     with _conn() as c:
         cur = c.execute(
             """INSERT INTO emails (sender, subject, body, url, score, reasons, status,
-               true_label, processing_ms, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)""",
+               true_label, processing_ms, created_at, url_score, text_risk, llm_summary, llm_fields)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (sender, subject, body, url, score, "; ".join(reasons), status,
-             true_label, processing_ms, datetime.now().isoformat(timespec="seconds")),
+             true_label, processing_ms, datetime.now().isoformat(timespec="seconds"),
+             url_score, text_risk, llm_summary, llm_fields),
         )
         return cur.lastrowid
 
