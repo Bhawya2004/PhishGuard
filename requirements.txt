@@ -1,0 +1,7 @@
+streamlit
+pandas
+scikit-learn
+joblib
+tldextract
+groq
+python-dotenv

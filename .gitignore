@@ -3,5 +3,7 @@ __pycache__/
 *.pyc
 .env
 data/*.csv
+!data/test.csv
+!data/emails_test.csv
 data/*.db
 .DS_Store
